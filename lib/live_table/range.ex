@@ -110,8 +110,14 @@ defmodule LiveTable.Range do
 
   defstruct [:field, :key, :options]
 
-  @today Date.utc_today()
-  @now DateTime.utc_now()
+  def date_pips_values(today) do
+    [Date.add(today, -7), today, Date.add(today, 7)]
+  end
+
+  def datetime_pips_values(now) do
+    [DateTime.add(now, -3600), DateTime.add(now, 0), DateTime.add(now, 3600)]
+  end
+
   @type_defaults %{
     number: %{
       min: 0,
@@ -127,24 +133,24 @@ defmodule LiveTable.Range do
       pips_stepped: true
     },
     date: %{
-      min: Date.add(@today, -1),
-      max: Date.add(@today, 1),
+      min: nil,
+      max: nil,
       step: 1,
-      default_min: Date.add(@today, -1),
-      default_max: Date.add(@today, 1),
+      default_min: nil,
+      default_max: nil,
       current_min: nil,
       current_max: nil,
       pips_mode: "count",
       # weekly markers
       pips_density: 3,
       pips_stepped: true,
-      pips_values: [Date.add(@today, -7), Date.add(@today, 0), Date.add(@today, 7)]
+      pips_values: []
     },
     datetime: %{
-      min: DateTime.add(@now, -24 * 3600),
-      max: DateTime.add(@now, 24 * 3600),
-      default_min: DateTime.add(@now, -24 * 3600),
-      default_max: DateTime.add(@now, 24 * 3600),
+      min: nil,
+      max: nil,
+      default_min: nil,
+      default_max: nil,
       current_min: nil,
       current_max: nil,
       step: 3600,
@@ -152,7 +158,7 @@ defmodule LiveTable.Range do
       # hourly markers
       pips_density: 2,
       pips_stepped: true,
-      pips_values: [DateTime.add(@now, -3600), DateTime.add(@now, 0), DateTime.add(@now, 3600)]
+      pips_values: []
     }
   }
 
@@ -172,10 +178,33 @@ defmodule LiveTable.Range do
     }
   }
 
+  def type_defaults do
+    now = DateTime.utc_now()
+    today = Date.utc_today()
+
+    dt_min = DateTime.add(today, -24 * 3600)
+    dt_max = DateTime.add(today, +24 * 3600)
+
+    date_min = Date.add(today, -1)
+    date_max = Date.add(today, +1)
+
+    @type_defaults
+    |> put_in([:datetime, :pips_values], datetime_pips_values(now))
+    |> put_in([:datetime, :min], dt_min)
+    |> put_in([:datetime, :default_min], dt_min)
+    |> put_in([:datetime, :max], dt_max)
+    |> put_in([:datetime, :default_max], dt_max)
+    |> put_in([:date, :min], date_min)
+    |> put_in([:date, :default_min], date_min)
+    |> put_in([:date, :max], date_max)
+    |> put_in([:date, :default_max], date_max)
+    |> put_in([:date, :pips_values], date_pips_values(today))
+  end
+
   @doc false
   def new(field, key, options) do
     type = Map.get(options, :type, :number)
-    type_defaults = Map.get(@type_defaults, type)
+    type_defaults = Map.get(type_defaults(), type)
 
     complete_options =
       @default_options

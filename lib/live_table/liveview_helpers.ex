@@ -42,11 +42,20 @@ defmodule LiveTable.LiveViewHelpers do
               key = String.to_atom(key)
               Map.put(acc, key, updated_filter)
 
-            {key, %{"id" => id}}, acc ->
+            {key, %{"id" => ids}}, acc ->
               filter = %LiveTable.Select{} = get_filter(key)
-              id = id |> Enum.map(&String.to_integer/1)
-              filter = %{filter | options: Map.update!(filter.options, :selected, &(&1 ++ id))}
-              key = key |> String.to_existing_atom()
+
+              ids =
+                Enum.map(
+                  ids,
+                  &case Integer.parse(&1) do
+                    {int, _} -> int
+                    :error -> &1
+                  end
+                )
+
+              filter = %{filter | options: Map.update!(filter.options, :selected, &(&1 ++ ids))}
+              key = String.to_existing_atom(key)
               Map.put(acc, key, filter)
 
             {key, custom_data}, acc when is_map(custom_data) ->
@@ -174,7 +183,8 @@ defmodule LiveTable.LiveViewHelpers do
         end
       end
 
-      defp validate_per_page(nil), do: get_in(unquote(opts[:table_options]), [:pagination, :default_size]) |> to_string()
+      defp validate_per_page(nil),
+        do: get_in(unquote(opts[:table_options]), [:pagination, :default_size]) |> to_string()
 
       defp validate_per_page(n) when is_binary(n) do
         try do
@@ -185,7 +195,8 @@ defmodule LiveTable.LiveViewHelpers do
             true -> "50"
           end
         rescue
-          ArgumentError -> get_in(unquote(opts[:table_options]), [:pagination, :default_size]) |> to_string()
+          ArgumentError ->
+            get_in(unquote(opts[:table_options]), [:pagination, :default_size]) |> to_string()
         end
       end
 

@@ -176,10 +176,9 @@ defmodule LiveTable.Select do
     dynamic([{^table, t}], ^acc and t.id in ^values)
   end
 
-  # update to dynamically take primary key. not always id.
   @doc false
-  def apply(acc, %__MODULE__{field: _field, options: %{selected: values}}) do
-    dynamic([p], ^acc and p.id in ^values)
+  def apply(acc, %__MODULE__{field: field, options: %{selected: values}}) do
+    dynamic([p], ^acc and field(p, ^field) in ^values)
   end
 
   @doc false

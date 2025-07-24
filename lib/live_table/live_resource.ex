@@ -32,12 +32,13 @@ defmodule LiveTable.LiveResource do
       @resource_opts unquote(opts)
       @repo Application.compile_env(:live_table, :repo)
 
+      def fields(_), do: []
       def fields, do: []
       def filters, do: []
 
       def table_options(), do: %{}
 
-      defoverridable fields: 0, filters: 0, table_options: 0
+      defoverridable fields: 0, filters: 0, table_options: 0, fields: 1
 
       def list_resources(fields, options, {module, function, args} = _data_provider)
           when is_atom(function) do

@@ -97,7 +97,7 @@ defmodule LiveTable.LiveViewHelpers do
         data_provider = socket.assigns[:data_provider] || unquote(opts[:data_provider])
 
         {resources, updated_options} =
-          case stream_resources(fields(), options, data_provider) do
+          case stream_resources(fields(socket.assigns), options, data_provider) do
             {resources, overflow} ->
               has_next_page = length(overflow) > 0
               options = put_in(options["pagination"][:has_next_page], has_next_page)

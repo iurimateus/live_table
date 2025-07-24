@@ -4,9 +4,10 @@ defmodule LiveTable.ExportHelpers do
     quote do
       def handle_event("export-csv", _params, socket) do
         {export_topic, updated_socket} = maybe_subscribe(socket)
+        fields = fields(socket.assigns)
 
         header_data =
-          fields()
+          fields
           |> Enum.reduce([[], []], fn {k, %{label: label}}, [key_names, headers] ->
             [[k | key_names], [label | headers]]
           end)
@@ -16,7 +17,7 @@ defmodule LiveTable.ExportHelpers do
 
         query_string =
           list_resources(
-            fields(),
+            fields,
             options,
             Map.get(socket.assigns, :data_provider) || unquote(opts[:schema])
           )
@@ -38,10 +39,11 @@ defmodule LiveTable.ExportHelpers do
         {export_topic, updated_socket} = maybe_subscribe(socket)
 
         options = socket.assigns.options |> put_in(["pagination", "paginate?"], false)
+        fields = fields(socket.assigns)
 
         count_query =
           list_resources(
-            fields(),
+            fields,
             options,
             Map.get(socket.assigns, :data_provider) || unquote(opts[:schema])
           )
@@ -57,7 +59,7 @@ defmodule LiveTable.ExportHelpers do
 
           _ ->
             header_data =
-              fields()
+              fields
               |> Enum.reduce([[], []], fn {k, %{label: label}}, [key_names, headers] ->
                 [[k | key_names], [label | headers]]
               end)
@@ -65,7 +67,7 @@ defmodule LiveTable.ExportHelpers do
 
             query_string =
               list_resources(
-                fields(),
+                fields,
                 options,
                 Map.get(socket.assigns, :data_provider) || unquote(opts[:schema])
               )

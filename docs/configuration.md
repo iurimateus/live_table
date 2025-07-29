@@ -14,6 +14,7 @@ Configure LiveTable globally in your `config/config.exs`:
 
 ```elixir
 config :live_table,
+  otp_app: :your_app,
   repo: YourApp.Repo,
   pubsub: YourApp.PubSub,
   components: YourApp.CustomComponents,  # Optional
@@ -564,6 +565,7 @@ Here's a comprehensive configuration example:
 ```elixir
 # config/config.exs
 config :live_table,
+  otp_app: :your_app,
   repo: YourApp.Repo,
   pubsub: YourApp.PubSub,
   defaults: %{

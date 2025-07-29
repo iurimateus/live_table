@@ -43,6 +43,7 @@ In your `config/config.exs`:
 
 ```elixir
 config :live_table,
+  otp_app: :your_app,
   repo: YourApp.Repo,
   pubsub: YourApp.PubSub
 

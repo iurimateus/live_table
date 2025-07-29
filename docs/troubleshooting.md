@@ -539,7 +539,7 @@ config :logger, :console,
 
 # See LiveTable internal operations
 config :live_table,
-  debug: true
+  debug: :trace
 ```
 
 ### Inspect Socket State

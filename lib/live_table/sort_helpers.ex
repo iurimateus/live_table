@@ -13,7 +13,7 @@ defmodule LiveTable.SortHelpers do
       phx-hook="SortableColumn"
       phx-value-sort={
         Jason.encode!(%{
-          @key => (@sort_params[@key] || :asc) |> to_string() |> next_sort_order()
+          @key => Map.get(@sort_params, @key, :asc) |> to_string() |> next_sort_order()
         })
       }
     >
@@ -32,12 +32,12 @@ defmodule LiveTable.SortHelpers do
           stroke-linejoin="round"
         >
           <path
-            class={[Keyword.get(@sort_params, @key) == :desc && "text-blue-600 dark:text-blue-500"]}
+            class={[Map.get(@sort_params, @key) == :desc && "text-blue-600 dark:text-blue-500"]}
             d="m7 15 5 5 5-5"
           >
           </path>
           <path
-            class={[Keyword.get(@sort_params, @key) == :asc && "text-blue-600 dark:text-blue-500"]}
+            class={[Map.get(@sort_params, @key) == :asc && "text-blue-600 dark:text-blue-500"]}
             d="m7 9 5-5 5 5"
           >
           </path>
@@ -66,12 +66,9 @@ defmodule LiveTable.SortHelpers do
     p =
       params
       |> Jason.decode!()
-      |> Keyword.new(fn {k, v} -> {String.to_existing_atom(k), String.to_existing_atom(v)} end)
+      |> Map.new(fn {k, v} -> {k, String.to_existing_atom(v)} end)
 
-    map
-    |> Map.update("sort_params", nil, fn x ->
-      merge_lists(x, p)
-    end)
+    Map.update(map, "sort_params", nil, &Map.merge(&1, p))
   end
 
   # Replaces existing sort params with new ones when shift key is not pressed
@@ -79,21 +76,9 @@ defmodule LiveTable.SortHelpers do
     p =
       params
       |> Jason.decode!()
-      |> Keyword.new(fn {k, v} -> {String.to_existing_atom(k), String.to_existing_atom(v)} end)
+      |> Map.new(fn {k, v} -> {k, String.to_existing_atom(v)} end)
 
-    map
-    |> Map.put("sort_params", p)
-  end
-
-  # Merges two keyword lists while preserving unique keys
-  def merge_lists(list1, list2) do
-    list2_map = Enum.into(list2, %{})
-
-    list1
-    |> Enum.map(fn {key, value} ->
-      {key, Map.get(list2_map, key, value)}
-    end)
-    |> Kernel.++(Enum.reject(list2, fn {key, _} -> key in Keyword.keys(list1) end))
+    Map.put(map, "sort_params", p)
   end
 
   # Dynamically calls a component function from a specified module. Used if user specifies a custom module.

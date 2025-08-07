@@ -9,15 +9,26 @@ defmodule LiveTable.LiveViewHelpers do
       # Fetches records based on URL params
       def handle_params(params, url, socket) do
         default_sort = get_in(unquote(opts[:table_options]), [:sorting, :default_sort])
-        current_path = URI.parse(url).path |> String.trim_leading("/")
+        current_path = url |> URI.parse() |> Map.fetch!(:path) |> String.trim_leading("/")
+
+        fields = fields(socket.assigns)
 
         sort_params =
-          Map.get(params, "sort_params", default_sort)
-          |> Enum.map(fn
-            # for default case
-            {k, v} when is_atom(k) and is_atom(v) -> {k, v}
+          params
+          |> Map.get("sort_params", default_sort)
+          |> Enum.into(%{}, fn
+            # default case
+            {k, v} when is_atom(k) and is_atom(v) ->
+              {k, v}
+
             # for incoming params from url
-            {k, v} -> {String.to_existing_atom(k), String.to_existing_atom(v)}
+            {k, v} ->
+              # string key
+              if fields |> Map.new() |> Map.has_key?(k) do
+                {k, String.to_existing_atom(v)}
+              else
+                {String.to_existing_atom(k), String.to_existing_atom(v)}
+              end
           end)
 
         filters =
@@ -97,7 +108,7 @@ defmodule LiveTable.LiveViewHelpers do
         data_provider = socket.assigns[:data_provider] || unquote(opts[:data_provider])
 
         {resources, updated_options} =
-          case stream_resources(fields(socket.assigns), options, data_provider) do
+          case stream_resources(fields, options, data_provider) do
             {resources, overflow} ->
               has_next_page = length(overflow) > 0
               options = put_in(options["pagination"][:has_next_page], has_next_page)

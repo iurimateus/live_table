@@ -49,7 +49,7 @@ defmodule LiveTable.CsvGenerator do
   defp stream_data_to_file(query, path, header_data) do
     [header_keys, header_labels] = header_data
 
-    atom_keys = Enum.map(header_keys, &String.to_atom/1)
+    keys = Enum.map(header_keys, &maybe_to_existing_atom/1)
 
     apply(@repo, :transaction, [
       fn ->
@@ -57,7 +57,11 @@ defmodule LiveTable.CsvGenerator do
 
         apply(@repo, :stream, [query, [max_rows: 1000]])
         |> Stream.map(fn row ->
-          Enum.map(atom_keys, &Map.get(row, &1))
+          # fallback in case atom exists, but key is a string
+          Enum.map(
+            keys,
+            &(Map.get(row, &1) || Map.get(row, to_string(&1)))
+          )
         end)
         |> Stream.chunk_every(1000)
         |> Stream.map(fn chunk ->
@@ -72,5 +76,15 @@ defmodule LiveTable.CsvGenerator do
       end,
       [timeout: :infinity]
     ])
+  end
+
+  @spec maybe_to_existing_atom(atom()) :: atom()
+  defp maybe_to_existing_atom(x) when is_atom(x), do: x
+
+  @spec maybe_to_existing_atom(atom() | binary()) :: atom() | binary()
+  defp maybe_to_existing_atom(x) when is_binary(x) do
+    String.to_existing_atom(x)
+  rescue
+    _ -> x
   end
 end
